@@ -7,3 +7,72 @@ import seaborn as sns
 from sklearn.model_selection import train_test_split
 import tensorflow as tf
 from sklearn.metrics import confusion_matrix,classification_report
+
+image_dir = Path('../input/cat-and-dog-images-dataset/Dog and Cat .png')
+filepaths = list(image_dir.glob(r'**/*.png'))
+labels = list(map(lambda x: os.path.split(os.path.split(x)[0])[1], filepaths))
+
+filepaths = pd.Series(filepaths, name='Filepath').astype(str)
+labels = pd.Series(labels, name='Label')
+
+image_df = pd.concat([filepaths, labels], axis=1)
+train_df, test_df = train_test_split(image_df, train_size=0.7, shuffle=True, random_state=1)
+train_generator = tf.keras.preprocessing.image.ImageDataGenerator(
+    rescale=1./255,
+    horizontal_flip=True,
+    width_shift_range=0.2,
+    height_shift_range=0.2,
+    validation_split=0.2
+)
+
+test_generator = tf.keras.preprocessing.image.ImageDataGenerator(
+    rescale=1./255
+)
+train_images = train_generator.flow_from_dataframe(
+    dataframe=train_df,
+    x_col='Filepath',
+    y_col='Label',
+    target_size=(224, 224),
+    color_mode='rgb',
+    class_mode='binary',
+    batch_size=32,
+    shuffle=True,
+    seed=42,
+    subset='training'
+)
+train_images = train_generator.flow_from_dataframe(
+    dataframe=train_df,
+    x_col='Filepath',
+    y_col='Label',
+    target_size=(224, 224),
+    color_mode='rgb',
+    class_mode='binary',
+    batch_size=32,
+    shuffle=True,
+    seed=42,
+    subset='training'
+)
+
+val_images = train_generator.flow_from_dataframe(
+    dataframe=train_df,
+    x_col='Filepath',
+    y_col='Label',
+    target_size=(224, 224),
+    color_mode='rgb',
+    class_mode='binary',
+    batch_size=32,
+    shuffle=True,
+    seed=42,
+    subset='validation'
+)
+
+test_images = test_generator.flow_from_dataframe(
+    dataframe=test_df,
+    x_col='Filepath',
+    y_col='Label',
+    target_size=(224, 224),
+    color_mode='rgb',
+    class_mode='binary',
+    batch_size=32,
+    shuffle=False
+)
